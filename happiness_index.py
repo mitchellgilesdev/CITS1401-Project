@@ -6,13 +6,16 @@ def main():
 
     metric = str(input("Choose metric to be tested from: min, mean, median, harmonic_mean. "))
     output_action = str(input(
-        "Choose action to be performed on the data using the specified metric. The options are: list, correlation. "))
+        "Choose action to be performed on the data using the specified metric."
+        " The options are: list, correlation. "))
 
     rows = read_file(file_name)
-    if rows
-    print(rows)
+    if rows is None:
+        raise Exception('Please enter a valid file name. The name entered was {}'.format(file_name))
+
     norm_rows = normalize_list(rows)
-    print(checker(norm_rows))
+    print(norm_rows)
+    # print(checker(norm_rows))
 
 
 def read_file(file_name):
@@ -38,7 +41,6 @@ def read_file(file_name):
     return row_list
 
 
-# NOT WORKING CORRECTLY
 def normalize_list(row_list):
     for row in row_list:
         row_min = min(value for value in row[2:] if value is not None)
@@ -52,13 +54,13 @@ def normalize_list(row_list):
     return row_list
 
 
-def checker(norm_rows):
-    for row in norm_rows:
-        for value in row[2:]:
-            if (value is not None) and ((value < 0) or (value > 1)):
-                print(row)
-                return False
-    return True
+# def norm_checker(norm_rows):
+#     for row in norm_rows:
+#         for value in row[2:]:
+#             if (value is not None) and ((value < 0) or (value > 1)):
+#                 print(row)
+#                 return False
+#     return True
 
 
 main()
