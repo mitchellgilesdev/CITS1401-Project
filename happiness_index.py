@@ -10,15 +10,15 @@ def main():
         raise Exception('Please enter a valid file name. The name entered was {}'.format(file_name))
 
     norm_rows = normalise_list(rows)
-    print(norm_rows)
+
     metric = str(input("Choose metric to be tested from: min, mean, median, harmonic_mean. ")).lower()
+    country_score = metric_calc(metric, norm_rows)
 
-    score = metric_calc(metric, norm_rows)
-    print(score)
-
-    output_action = str(input(
+    output_type = str(input(
         "Choose action to be performed on the data using the specified metric."
-        " The options are: list, correlation. "))
+        " The options are: list, correlation. ")).lower()
+
+    output_format(output_type, country_score, norm_rows, metric)
 
 
 def read_file(file_name):
@@ -81,12 +81,14 @@ def mean_metric(rows):
     for row in rows:
         country_name = row[0]
         total = 0
+        skipped = 0
         for value in row[2:]:
             if value is None:
+                skipped += 1
                 continue
             total += value
 
-        mean = total / (len(row) - 2)
+        mean = total / (len(row) - 2 - skipped)
         means.append([country_name, mean])
 
     return means
@@ -111,7 +113,20 @@ def median_metric(rows):
 
 
 def harmon_metric(rows):
-    return "hai"
+    harmon_means = []
+
+    for row in rows:
+        country_name = row[0]
+        row_size = 0
+        inverse_sum = 0
+        for value in row[2:]:
+            if value is not None and (value != 0):
+                row_size += 1
+                inverse_sum += 1 / value
+        harmonic_mean = row_size / inverse_sum
+        harmon_means.append([country_name, harmonic_mean])
+
+    return harmon_means
 
 
 metric_methods = {
@@ -128,6 +143,39 @@ def metric_calc(metric_t, rows):
     if func is None:
         raise Exception('Input a correct metric. You gave: {}'.format(metric_t))
     return func(rows)
+
+
+def output_format(action, list_pair, rows, calc_metric):
+    if action == "list":
+        pairs = sorted(list_pair, key=lambda x: x[1], reverse=True)
+        print('Ranked list of countries\' happiness scores based on the {} metric'.format(calc_metric))
+        for pair in pairs:
+            print('{} {:.4f}'.format(pair[0], pair[1]))
+    elif action == "correlation":
+        ranked_calc_score = sorted(list_pair, key=lambda x: x[1], reverse=True)
+        ranked_life_score = sorted(rows, key=lambda x: x[1], reverse=True)
+
+        # {"Australia": [calc_rank, life_rank]}
+        ranks = {}
+
+        for i, value in enumerate(ranked_calc_score):
+            ranks.update({value[0]: [i + 1]})
+        for i, value in enumerate(ranked_life_score):
+            ranks[value[0]].append(i + 1)
+
+        diff_sum = 0
+        for _, values in ranks.items():
+            diff_sqrd = (values[1] - values[0]) ** 2
+            diff_sum += diff_sqrd
+
+        n = len(ranks)
+        spearman = 1 - ((6 * diff_sum) / (n * (n ** 2 - 1)))
+        print(
+            'The correlation coefficient between the study ranking and the ranking using the {} metric is {:.4f}'.format(
+                calc_metric, spearman))
+
+    else:
+        raise Exception('The action entered was wrong. You gave: {}'.format(action))
 
 
 main()
