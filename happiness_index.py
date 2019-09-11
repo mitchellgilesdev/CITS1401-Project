@@ -3,19 +3,22 @@ import os
 
 def main():
     file_name = str(input("Enter the name of the file containing World Happiness computation data: "))
-    if not os.path.isfile(file_name):
-        return None
+
     metric = str(input("Choose metric to be tested from: min, mean, median, harmonic_mean. "))
     output_action = str(input(
         "Choose action to be performed on the data using the specified metric. The options are: list, correlation. "))
 
     rows = read_file(file_name)
+    if rows
     print(rows)
     norm_rows = normalize_list(rows)
     print(checker(norm_rows))
 
 
 def read_file(file_name):
+    if not os.path.isfile(file_name):
+        return None
+
     row_list = []
 
     in_file = open(file_name, "r")
@@ -35,6 +38,7 @@ def read_file(file_name):
     return row_list
 
 
+# NOT WORKING CORRECTLY
 def normalize_list(row_list):
     for row in row_list:
         row_min = min(value for value in row[2:] if value is not None)
