@@ -1,27 +1,55 @@
+"""
+File: happiness_index.py
+Title: Project 1: Computing World Happiness Index
+Author: Mitchell Giles
+Student_Number: 22490361
+"""
+
 import os
 
 
 def main():
+    # capturing the user file_name input
     file_name = str(input("Enter the name of the file containing World Happiness computation data: "))
 
-    # checking the file input is valid
+    # normalising the file if no error occurs
     rows = read_file(file_name)
-    if rows is None:
-        raise Exception('Please enter a valid file name. The name entered was {}'.format(file_name))
+    try:
+        norm_rows = normalise_list(rows)
+    except TypeError:
+        print("Please input a valid file. You gave: ", file_name)
+        return None
+    except IndexError:
+        print("The file you gave was incorrectly formatted or didn't contain enough data. You gave:", file_name)
+        return None
 
-    norm_rows = normalise_list(rows)
-
+    # calculating the specified metric with valid input
     metric = str(input("Choose metric to be tested from: min, mean, median, harmonic_mean. ")).lower()
-    country_score = metric_calc(metric, norm_rows)
+    try:
+        country_score = metric_calc(metric, norm_rows)
+    except TypeError:
+        print("The metric type you gave was invalid. You gave: ", metric)
+        return None
 
+    # producing the output
     output_type = str(input(
         "Choose action to be performed on the data using the specified metric."
         " The options are: list, correlation. ")).lower()
-
-    output_format(output_type, country_score, norm_rows, metric)
+    try:
+        output_format(output_type, country_score, norm_rows, metric)
+    except ValueError:
+        print("The action you gave was invalid. You gave:", output_type)
+        return None
 
 
 def read_file(file_name):
+    """
+    Reads in the file line by line
+
+    :param file_name: the name of the file in the current directory
+    :return: a list of each of the lines in the file
+    """
+
     if not os.path.isfile(file_name):
         return None
 
@@ -45,6 +73,12 @@ def read_file(file_name):
 
 
 def normalise_list(row_list):
+    """
+    Normalises all the values in a row based on the row min and max
+
+    :param row_list: a list of each or the rows to be normalised
+    :return: a list of the normalised rows
+    """
     column_num = 2
     row_size = len(row_list[1])
     while column_num < row_size:
@@ -62,9 +96,13 @@ def normalise_list(row_list):
     return row_list
 
 
-# Compute the min of each column across every row, and
-# returns a list of [[countryName, min], [countryName, min] ...] for each column
 def min_metric(rows):
+    """
+    Compute the min of of all columns for each row. Excluding None.
+
+    :param rows: a list of rows
+    :return: a list of [country_name, min] pairs for each country
+    """
     mins = []
 
     for row in rows:
@@ -76,6 +114,12 @@ def min_metric(rows):
 
 
 def mean_metric(rows):
+    """
+    Compute the mean of all the columns for each row. Excluding None.
+
+    :param rows: a list of rows
+    :return: a list of [country_name, mean] pairs for each country
+    """
     means = []
 
     for row in rows:
@@ -95,6 +139,12 @@ def mean_metric(rows):
 
 
 def median_metric(rows):
+    """
+    Compute the median for all the columns in a row. Excluding None values.
+
+    :param rows: a list of rows
+    :return: a list of [country_name, median] pairs for each row
+    """
     medians = []
 
     for row in rows:
@@ -113,6 +163,12 @@ def median_metric(rows):
 
 
 def harmon_metric(rows):
+    """
+    Compute the harmonic mean for all the columns in a row. Excluding None and 0 values.
+
+    :param rows: a list of rows
+    :return: a list of [country_name, harmonic_mean] pairs for each row.
+    """
     harmon_means = []
 
     for row in rows:
@@ -129,7 +185,11 @@ def harmon_metric(rows):
     return harmon_means
 
 
+"""
+Used to map each string to it's respective function name.
+"""
 metric_methods = {
+
     'min': min_metric,
     'mean': mean_metric,
     'median': median_metric,
@@ -137,15 +197,28 @@ metric_methods = {
 }
 
 
-# pass in the metric string and return for each of the functions
 def metric_calc(metric_t, rows):
+    """
+    Converting the string to a function call to the respective metric calculation.
+
+    :param metric_t: the specified metric as a string
+    :param rows: a list containing each row
+    :return: a [country_name, metric] pair for each row
+    """
     func = metric_methods.get(metric_t)
-    if func is None:
-        raise Exception('Input a correct metric. You gave: {}'.format(metric_t))
     return func(rows)
 
 
 def output_format(action, list_pair, rows, calc_metric):
+    """
+    Sorts the list as required, formats the outputs and prints.
+
+    :param action: the output type to be used
+    :param list_pair: the [country_name, metric] list as calculated
+    :param rows: the normalised list of rows
+    :param calc_metric: the metric calculated from user input
+    :return: 0 if printed correctly, ValueError if incorrect input
+    """
     if action == "list":
         pairs = sorted(list_pair, key=lambda x: x[1], reverse=True)
         print('Ranked list of countries\' happiness scores based on the {} metric'.format(calc_metric))
@@ -155,7 +228,7 @@ def output_format(action, list_pair, rows, calc_metric):
         ranked_calc_score = sorted(list_pair, key=lambda x: x[1], reverse=True)
         ranked_life_score = sorted(rows, key=lambda x: x[1], reverse=True)
 
-        # {"Australia": [calc_rank, life_rank]}
+        # e.g. {"Australia": [calc_rank, life_rank]}
         ranks = {}
 
         for i, value in enumerate(ranked_calc_score):
@@ -175,7 +248,5 @@ def output_format(action, list_pair, rows, calc_metric):
                 calc_metric, spearman))
 
     else:
-        raise Exception('The action entered was wrong. You gave: {}'.format(action))
-
-
-main()
+        # return an error code if the action input was invalid to catch
+        raise ValueError
